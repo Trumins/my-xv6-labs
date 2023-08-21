@@ -92,8 +92,8 @@ e1000_init(uint32 *xregs)
   regs[E1000_IMS] = (1 << 7); // RXDW -- Receiver Descriptor Write Back
 }
 
-int
-e1000_transmit(struct mbuf *m)
+//my
+int e1000_transmit(struct mbuf *m)
 {
   acquire(&e1000_lock);
 
@@ -120,8 +120,7 @@ e1000_transmit(struct mbuf *m)
   return 0;
 }
 
-static void
-e1000_recv(void)
+static void e1000_recv(void)
 {
 
   while(1) {
