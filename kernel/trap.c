@@ -33,8 +33,7 @@ trapinithart(void)
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
 //
-void
-usertrap(void)
+void usertrap(void)
 {
   int which_dev = 0;
 
@@ -76,6 +75,7 @@ usertrap(void)
   if(p->killed)
     exit(-1);
 
+    //my
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2) {
     if(p->alarm_interval != 0) {
