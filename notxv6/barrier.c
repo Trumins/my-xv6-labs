@@ -22,8 +22,8 @@ barrier_init(void)
   bstate.nthread = 0;
 }
 
-static void 
-barrier()
+//my
+static void barrier()
 {
   pthread_mutex_lock(&bstate.barrier_mutex);
   if(++bstate.nthread < nthread) {

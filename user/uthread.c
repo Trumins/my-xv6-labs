@@ -51,12 +51,9 @@ thread_init(void)
   current_thread->state = RUNNING;
 }
 
-void 
-thread_schedule(void)
+void thread_schedule(void)
 {
   struct thread *t, *next_thread;
-
-  /* Find another runnable thread. */
   next_thread = 0;
   t = current_thread + 1;
   for(int i = 0; i < MAX_THREAD; i++){
@@ -68,13 +65,13 @@ thread_schedule(void)
     }
     t = t + 1;
   }
-
   if (next_thread == 0) {
     printf("thread_schedule: no runnable threads\n");
     exit(-1);
   }
 
-  if (current_thread != next_thread) {         /* switch threads?  */
+  //my
+  if (current_thread != next_thread) {
     next_thread->state = RUNNING;
     t = current_thread;
     current_thread = next_thread;
