@@ -6,6 +6,8 @@
 int matchhere(char*, char*);
 int matchstar(int, char*, char*);
 
+
+
 int match(char *re, char *text) {
 	if(re[0] == '^')
 		return matchhere(re+1, text);
