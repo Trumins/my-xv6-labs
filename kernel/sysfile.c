@@ -283,8 +283,8 @@ create(char *path, short type, short major, short minor)
   return ip;
 }
 
-uint64
-sys_open(void)
+//my
+uint64 sys_open(void)
 {
   char path[MAXPATH];
   int fd, omode;
@@ -504,8 +504,8 @@ sys_pipe(void)
   return 0;
 }
 
-uint64
-sys_symlink(void)
+//my
+uint64 sys_symlink(void)
 {
   struct inode *ip;
   char target[MAXPATH], path[MAXPATH];
@@ -520,7 +520,6 @@ sys_symlink(void)
     return -1;
   }
 
-  // use the first data block to store target path.
   if(writei(ip, 0, (uint64)target, 0, strlen(target)) < 0) {
     end_op();
     return -1;
