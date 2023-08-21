@@ -115,18 +115,11 @@ found:
     return 0;
   }
 
-  // Make a new kernel pagetable for the new process
   p->kernelpgtbl = kvminit_newpgtbl();
-  // printf("kernel_pagetable: %p\n", p->kernelpgtbl);
-
-  // Allocate a page for the process's kernel stack.
-  // Map it high in memory, followed by an invalid
-  // guard page.
   char *pa = kalloc();
   if(pa == 0)
     panic("kalloc");
-  uint64 va = KSTACK((int)0); // fixed location for kstack position
-  // printf("map krnlstack va: %p to pa: %p\n", va, pa);
+  uint64 va = KSTACK((int)0); 
   kvmmap(p->kernelpgtbl, va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
   p->kstack = va;
 
@@ -261,8 +254,7 @@ userinit(void)
 
 // Grow or shrink user memory by n bytes.
 // Return 0 on success, -1 on failure.
-int
-growproc(int n)
+int growproc(int n)
 {
   uint sz;
   struct proc *p = myproc();
@@ -489,41 +481,25 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
-void
-scheduler(void)
+void scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   
   c->proc = 0;
   for(;;){
-    // Avoid deadlock by ensuring that devices can interrupt.
     intr_on();
-    
     int found = 0;
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
-
-        // switch to process-specific kernel page table
         w_satp(MAKE_SATP(p->kernelpgtbl));
         sfence_vma();
-        // printf("trace: loaded kernel pagetable %p\n", p->kernelpgtbl);
-        
         swtch(&c->context, &p->context);
-
-        // switch kernel page table back to the globally shared kernel_pagetable
         kvminithart();
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
         c->proc = 0;
-
         found = 1;
       }
       release(&p->lock);

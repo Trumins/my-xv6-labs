@@ -20,32 +20,16 @@ extern char trampoline[]; // trampoline.S
 
 void kvm_map_pagetable(pagetable_t pgtbl) {
   
-  // uart registers
   kvmmap(pgtbl, UART0, UART0, PGSIZE, PTE_R | PTE_W);
 
-  // virtio mmio disk interface
   kvmmap(pgtbl, VIRTIO0, VIRTIO0, PGSIZE, PTE_R | PTE_W);
 
-  // CLINT
-  // local interrupt controller, used to configure timers. not needed after the kernel boots up.
-  // no need to map to process-specific kernel page tables.
-  // it also lies at 0x02000000, which is lower than PLIC's 0x0c000000
-  // and will conflict with process memory, which is located at the lower end of
-  // the address space. 
-
-  // kvmmap(pgtbl, CLINT, CLINT, 0x10000, PTE_R | PTE_W);
-
-  // PLIC
   kvmmap(pgtbl, PLIC, PLIC, 0x400000, PTE_R | PTE_W);
 
-  // map kernel text executable and read-only.
   kvmmap(pgtbl, KERNBASE, KERNBASE, (uint64)etext-KERNBASE, PTE_R | PTE_X);
 
-  // map kernel data and the physical RAM we'll make use of.
   kvmmap(pgtbl, (uint64)etext, (uint64)etext, PHYSTOP-(uint64)etext, PTE_R | PTE_W);
 
-  // map the trampoline for trap entry/exit to
-  // the highest virtual address in the kernel.
   kvmmap(pgtbl, TRAMPOLINE, (uint64)trampoline, PGSIZE, PTE_R | PTE_X);
 }
 
@@ -63,8 +47,7 @@ kvminit_newpgtbl()
 /*
  * create a direct-map page table for the kernel.
  */
-void
-kvminit()
+void kvminit()
 {
   kernel_pagetable = kvminit_newpgtbl();
   // CLINT *is* however required during kernel boot up and
@@ -143,8 +126,7 @@ walkaddr(pagetable_t pagetable, uint64 va)
 // add a mapping to a kernel page table. (lab3 enables standalone kernel page tables for each and every process)
 // only used when booting.
 // does not flush TLB or enable paging.
-void
-kvmmap(pagetable_t pgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
+void kvmmap(pagetable_t pgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
 {
   if(mappages(pgtbl, va, sz, pa, perm) != 0)
     panic("kvmmap");
@@ -154,8 +136,7 @@ kvmmap(pagetable_t pgtbl, uint64 va, uint64 pa, uint64 sz, int perm)
 // a physical address. only needed for
 // addresses on the stack.
 // assumes va is page aligned.
-uint64
-kvmpa(pagetable_t kernelpgtbl, uint64 va)
+uint64 kvmpa(pagetable_t kernelpgtbl, uint64 va)
 {
   uint64 off = va % PGSIZE;
   pte_t *pte;
@@ -336,10 +317,8 @@ freewalk(pagetable_t pagetable)
 
 // Free a process-specific kernel page-table,
 // without freeing the underlying physical memory
-void
-kvm_free_kernelpgtbl(pagetable_t pagetable)
+void kvm_free_kernelpgtbl(pagetable_t pagetable)
 {
-  // there are 2^9 = 512 PTEs in a page table.
   for(int i = 0; i < 512; i++){
     pte_t pte = pagetable[i];
     uint64 child = PTE2PA(pte);
@@ -471,11 +450,7 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 int copyin_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len);
 int copyinstr_new(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max);
 
-// Copy from user to kernel.
-// Copy len bytes to dst from virtual address srcva in a given page table.
-// Return 0 on success, -1 on error.
-int
-copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
+int copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
 {
   // printf("trace: copyin1 %p\n", *walk(pagetable, srcva, 0));
   // printf("trace: copyin2 %p\n", *walk(myproc()->kernelpgtbl, srcva, 0));
@@ -483,32 +458,22 @@ copyin(pagetable_t pagetable, char *dst, uint64 srcva, uint64 len)
   return copyin_new(pagetable, dst, srcva, len);
 }
 
-// Copy a null-terminated string from user to kernel.
-// Copy bytes to dst from virtual address srcva in a given page table,
-// until a '\0', or max.
-// Return 0 on success, -1 on error.
-int
-copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
+int copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 {
   // printf("trace: copyinstr %p\n", walk(pagetable, srcva, 0));
   return copyinstr_new(pagetable, dst, srcva, max);
 }
 
 int pgtblprint(pagetable_t pagetable, int depth) {
-    // there are 2^9 = 512 PTEs in a page table.
   for(int i = 0; i < 512; i++){
     pte_t pte = pagetable[i];
     if(pte & PTE_V) {
-      // print
       printf("..");
       for(int j=0;j<depth;j++) {
         printf(" ..");
       }
       printf("%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
-
-      // if not a leaf page table, recursively print out the child table
       if((pte & (PTE_R|PTE_W|PTE_X)) == 0){
-        // this PTE points to a lower-level page table.
         uint64 child = PTE2PA(pte);
         pgtblprint((pagetable_t)child,depth+1);
       }
