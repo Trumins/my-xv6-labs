@@ -486,8 +486,7 @@ sys_pipe(void)
   return 0;
 }
 
-uint64
-sys_mmap(void)
+uint64 sys_mmap(void)
 {
   uint64 addr, sz, offset;
   int prot, flags, fd; struct file *f;
@@ -505,14 +504,6 @@ sys_mmap(void)
   struct proc *p = myproc();
   struct vma *v = 0;
   uint64 vaend = MMAPEND; // non-inclusive
-  
-  // mmaptest never passed a non-zero addr argument.
-  // so addr here is ignored and a new unmapped va region is found to
-  // map the file
-  // our implementation maps file right below where the trapframe is,
-  // from high addresses to low addresses.
-
-  // Find a free vma, and calculate where to map the file along the way.
   for(int i=0;i<NVMA;i++) {
     struct vma *vv = &p->vmas[i];
     if(vv->valid == 0) {

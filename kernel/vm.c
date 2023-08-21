@@ -438,8 +438,8 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
 // Remove n BYTES (not pages) of vma mappings starting from va. va must be
 // page-aligned. The mappings NEED NOT exist.
 // Also free the physical memory and write back vma data to disk if necessary.
-void
-vmaunmap(pagetable_t pagetable, uint64 va, uint64 nbytes, struct vma *v)
+//my
+void vmaunmap(pagetable_t pagetable, uint64 va, uint64 nbytes, struct vma *v)
 {
   uint64 a;
   pte_t *pte;
