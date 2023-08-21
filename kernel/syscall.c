@@ -159,8 +159,7 @@ const char *syscall_names[] = {
 [SYS_sysinfo]   "sysinfo",
 };
 
-void
-syscall(void)
+void syscall(void)
 {
   int num;
   struct proc *p = myproc();

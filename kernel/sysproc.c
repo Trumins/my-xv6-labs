@@ -109,8 +109,7 @@ sys_trace(void)
   return 0;
 }
 
-uint64
-sys_sysinfo(void)
+uint64 sys_sysinfo(void)
 {
   uint64 addr;
 
@@ -121,7 +120,6 @@ sys_sysinfo(void)
   sinfo.freemem = count_free_mem(); // kalloc.c
   sinfo.nproc = count_process(); // proc.c
   
-  // copy sysinfo to user space
   if(copyout(myproc()->pagetable, addr, (char *)&sinfo, sizeof(sinfo)) < 0)
     return -1;
   return 0;

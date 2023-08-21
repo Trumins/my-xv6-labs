@@ -81,8 +81,7 @@ kalloc(void)
   return (void*)r;
 }
 
-uint64
-count_free_mem(void) // added for counting free memory in bytes (lab2)
+uint64 count_free_mem(void) 
 {
   acquire(&kmem.lock);
   uint64 mem_bytes = 0;

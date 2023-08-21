@@ -263,12 +263,10 @@ fork(void)
   int i, pid;
   struct proc *np;
   struct proc *p = myproc();
-
   // Allocate process.
   if((np = allocproc()) == 0){
     return -1;
   }
-
   // Copy user memory from parent to child.
   if(uvmcopy(p->pagetable, np->pagetable, p->sz) < 0){
     freeproc(np);
@@ -276,31 +274,24 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
-
   np->parent = p;
-
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
-
   // Cause fork to return 0 in the child.
   np->trapframe->a0 = 0;
-
   // increment reference counts on open file descriptors.
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);
   np->cwd = idup(p->cwd);
-
   safestrcpy(np->name, p->name, sizeof(p->name));
 
+  //me
   np->syscall_trace = p->syscall_trace;
 
   pid = np->pid;
-
   np->state = RUNNABLE;
-
   release(&np->lock);
-
   return pid;
 }
 
@@ -699,11 +690,9 @@ procdump(void)
 }
 
 uint64
-count_process(void) { // added function for counting used process slots (lab2)
+count_process(void) { 
   uint64 cnt = 0;
   for(struct proc *p = proc; p < &proc[NPROC]; p++) {
-    // acquire(&p->lock);
-    // no need to lock since all we do is reading, no writing will be done to the proc.
     if(p->state != UNUSED) {
       cnt++;
     }
