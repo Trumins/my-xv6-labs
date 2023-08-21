@@ -307,38 +307,31 @@ uvmfree(pagetable_t pagetable, uint64 sz)
 // physical memory.
 // returns 0 on success, -1 on failure.
 // frees any allocated pages on failure.
-int
-uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
+int uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
 {
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  // char *mem;
 
   for(i = 0; i < sz; i += PGSIZE){
+
     if((pte = walk(old, i, 0)) == 0)
       panic("uvmcopy: pte should exist");
+    
+    //my
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
     pa = PTE2PA(*pte);
+
     if(*pte & PTE_W) {
-      // clear out PTE_W for parent, set PTE_COW
       *pte = (*pte & ~PTE_W) | PTE_COW;
     }
     flags = PTE_FLAGS(*pte);
-    // map physical page of parent directly to child (copy-on-write)
-    // since the write flag has already been cleared for the parent
-    // the child mapping won't have the write flag as well.
-    //
-    // for page that is already read-only for parent, it will be read-
-    // only for child as well.
-    // for read-only page that is also a cow page, the PTE_COW flag will
-    // be copied over to child page, making it a cow page automatically.
+
     if(mappages(new, i, PGSIZE, (uint64)pa, flags) != 0){
       goto err;
     }
-    // for any cases above, we created a new reference to the physical
-    // page, so increase reference count by one.
+
     krefpage((void*)pa);
   }
   return 0;
@@ -364,22 +357,26 @@ uvmclear(pagetable_t pagetable, uint64 va)
 // Copy from kernel to user.
 // Copy len bytes from src to virtual address dstva in a given page table.
 // Return 0 on success, -1 on error.
-int
-copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
+int copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 {
   uint64 n, va0, pa0;
 
   while(len > 0){
+
+    //my
     if(uvmcheckcowpage(dstva))
       uvmcowcopy(dstva);
     va0 = PGROUNDDOWN(dstva);
     pa0 = walkaddr(pagetable, va0);
+
+
     if(pa0 == 0)
       return -1;
     n = PGSIZE - (dstva - va0);
     if(n > len)
       n = len;
     memmove((void *)(pa0 + (dstva - va0)), src, n);
+
 
     len -= n;
     src += n;
@@ -467,7 +464,6 @@ int uvmcheckcowpage(uint64 va) {
     && (*pte & PTE_COW); // page is a cow page
 }
 
-// Copy the cow page, then map it as writable
 int uvmcowcopy(uint64 va) {
   pte_t *pte;
   struct proc *p = myproc();

@@ -58,20 +58,17 @@ freerange(void *pa_start, void *pa_end)
 // which normally should have been returned by a
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
-void
-kfree(void *pa)
+void kfree(void *pa)
 {
   struct run *r;
 
   if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
     panic("kfree");
 
+  //my
   acquire(&pgreflock);
   if(--PA2PGREF(pa) <= 0) {
-    // when the reference count of the page goes to zero, free the page
 
-    // Fill with junk to catch dangling refs.
-    // pa will be memset multiple times if race-condition occurred.
     memset(pa, 1, PGSIZE);
 
     r = (struct run*)pa;
