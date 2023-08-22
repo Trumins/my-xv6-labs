@@ -356,7 +356,7 @@ sfence_vma()
 #define PTE_U (1L << 4) // 1 -> user can access
 
 //my
-#define PTE_COW (1L << 8) // copy-on-write page, use the reserved 8th bit of a pte flag.
+#define PTE_COW (1L << 8) // 使用flags的后8为表示是否为lazy复制
 
 // shift a physical address to the right place for a PTE.
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)
